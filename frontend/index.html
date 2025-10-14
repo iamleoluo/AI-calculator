@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Calculator - Fourier Series</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .hint {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .coefficients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .coeff-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .coeff-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .coeff-value {
+            font-size: 1.2em;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .verification-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .verification-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .verification-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .thinking-step {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .step-content {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .iterations-info {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 AI Calculator</h1>
+        <p class="subtitle">透明化的 AI 數學推理 - 傅立葉級數計算</p>
+
+        <div class="input-section">
+            <h2 style="margin-bottom: 20px; color: #333;">輸入函數</h2>
+
+            <div class="form-group">
+                <label for="functionExpr">函數表達式 (Python 語法)</label>
+                <input type="text" id="functionExpr" value="np.sin(t)" placeholder="例如: np.sin(t), np.cos(2*t), t**2">
+                <div class="hint">使用 np.sin, np.cos, np.exp 等 NumPy 函數。變數必須是 t。</div>
+            </div>
+
+            <div class="form-group">
+                <label for="period">週期 (T)</label>
+                <input type="number" id="period" value="6.283185" step="0.000001" placeholder="例如: 6.283185 (2π)">
+                <div class="hint">函數的週期，例如 sin(t) 的週期是 2π ≈ 6.283185</div>
+            </div>
+
+            <div class="form-group">
+                <label for="nTerms">項數 (n)</label>
+                <input type="number" id="nTerms" value="5" min="1" max="10" placeholder="1-10">
+                <div class="hint">計算傅立葉級數的項數 (1-10)</div>
+            </div>
+
+            <button id="computeBtn" onclick="computeFourier()">開始計算</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>AI 正在推導傅立葉級數...</p>
+            <p style="color: #666; margin-top: 10px;">這可能需要 10-30 秒</p>
+        </div>
+
+        <div class="results" id="results">
+            <div id="iterationsInfo"></div>
+            <div id="verificationBadge"></div>
+
+            <div class="result-section">
+                <h2>📊 傅立葉係數</h2>
+                <div id="coefficients"></div>
+            </div>
+
+            <div class="result-section">
+                <h2>📈 視覺化比較</h2>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+            <div class="result-section">
+                <h2>📉 逐點誤差</h2>
+                <div class="chart-container">
+                    <canvas id="errorChart"></canvas>
+                </div>
+            </div>
+
+            <div class="result-section">
+                <h2>🤔 AI 推理過程</h2>
+                <div id="thinkingProcess"></div>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+    </div>
+
+    <script>
+        let comparisonChart = null;
+        let errorChart = null;
+
+        async function computeFourier() {
+            const functionExpr = document.getElementById('functionExpr').value;
+            const period = parseFloat(document.getElementById('period').value);
+            const nTerms = parseInt(document.getElementById('nTerms').value);
+
+            // Validation
+            if (!functionExpr || !period || !nTerms) {
+                alert('請填寫所有欄位');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('computeBtn').disabled = true;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = '';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/fourier-series', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        function_expr: functionExpr,
+                        period: period,
+                        n_terms: nTerms
+                    })
+                });
+
+                const data = await response.json();
+
+                // Display results even if not fully successful
+                // (e.g., verification failed but we still have visualization)
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('errorContainer').innerHTML = `
+                    <div class="error-message">
+                        <strong>錯誤：</strong> ${error.message}
+                    </div>
+                `;
+            } finally {
+                document.getElementById('computeBtn').disabled = false;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            console.log('Displaying results:', data);
+
+            // Show error message if not successful
+            if (!data.success && data.error) {
+                document.getElementById('iterationsInfo').innerHTML = `
+                    <div class="error-message">
+                        ⚠️ ${data.error}
+                        <br><small>仍然顯示最後一次嘗試的結果</small>
+                    </div>
+                `;
+            } else if (data.iterations > 1) {
+                document.getElementById('iterationsInfo').innerHTML = `
+                    <div class="iterations-info">
+                        ℹ️ AI 經過 ${data.iterations} 次迭代修正後得到正確結果
+                    </div>
+                `;
+            } else {
+                document.getElementById('iterationsInfo').innerHTML = '';
+            }
+
+            // Verification badge
+            if (data.verification) {
+                const verification = data.verification;
+                const badgeClass = verification.is_verified ? 'verification-pass' : 'verification-fail';
+                const badgeText = verification.is_verified ? '✓ 驗證通過' : '✗ 驗證失敗';
+                document.getElementById('verificationBadge').innerHTML = `
+                    <div class="verification-badge ${badgeClass}">${badgeText}</div>
+                    <p>最大相對誤差: ${(verification.max_error * 100).toFixed(4)}%</p>
+                    <p>平均相對誤差: ${(verification.mean_error * 100).toFixed(4)}%</p>
+                `;
+            } else {
+                document.getElementById('verificationBadge').innerHTML = '';
+            }
+
+            // Coefficients
+            const coeffs = data.coefficients;
+            if (!coeffs) {
+                document.getElementById('coefficients').innerHTML = '<p>無法獲取係數數據</p>';
+            } else {
+            let coeffHtml = `
+                <div class="coefficients-grid">
+                    <div class="coeff-item">
+                        <div class="coeff-label">a₀</div>
+                        <div class="coeff-value">${coeffs.a0.toFixed(6)}</div>
+                    </div>
+            `;
+
+            for (let i = 0; i < coeffs.an.length; i++) {
+                coeffHtml += `
+                    <div class="coeff-item">
+                        <div class="coeff-label">a${i + 1}</div>
+                        <div class="coeff-value">${coeffs.an[i].toFixed(6)}</div>
+                    </div>
+                    <div class="coeff-item">
+                        <div class="coeff-label">b${i + 1}</div>
+                        <div class="coeff-value">${coeffs.bn[i].toFixed(6)}</div>
+                    </div>
+                `;
+            }
+
+            coeffHtml += '</div>';
+            document.getElementById('coefficients').innerHTML = coeffHtml;
+            }
+
+            // Visualization (always try to display if available)
+            if (data.visualization) {
+                displayCharts(data.visualization);
+            } else {
+                console.warn('No visualization data available');
+            }
+
+            // Thinking process
+            if (data.thinking_process && data.thinking_process.steps) {
+                let thinkingHtml = '';
+                data.thinking_process.steps.forEach(step => {
+                    thinkingHtml += `
+                        <div class="thinking-step">
+                            <div class="step-title">步驟 ${step.step_number}: ${step.title}</div>
+                            <div class="step-content">${step.explanation || step.calculation || ''}</div>
+                        </div>
+                    `;
+                });
+                document.getElementById('thinkingProcess').innerHTML = thinkingHtml;
+            }
+
+            // Show results
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function displayCharts(vizData) {
+            console.log('displayCharts called with:', vizData);
+
+            // Check if Chart is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded!');
+                alert('Chart.js 載入失敗，請重新整理頁面');
+                return;
+            }
+
+            // Check if vizData is valid
+            if (!vizData || !vizData.t_points || !vizData.original_values) {
+                console.error('Invalid visualization data:', vizData);
+                return;
+            }
+
+            // Comparison chart
+            const comparisonCtx = document.getElementById('comparisonChart');
+            if (!comparisonCtx) {
+                console.error('Canvas element not found: comparisonChart');
+                return;
+            }
+
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+
+            try {
+                comparisonChart = new Chart(comparisonCtx, {
+                type: 'line',
+                data: {
+                    labels: vizData.t_points,
+                    datasets: [
+                        {
+                            label: '原始函數',
+                            data: vizData.original_values,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: '傅立葉重建',
+                            data: vizData.reconstructed_values,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '原始函數 vs 傅立葉級數重建'
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 't'
+                            },
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'f(t)'
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Comparison chart created successfully');
+            } catch (error) {
+                console.error('Error creating comparison chart:', error);
+                alert('視覺化圖表建立失敗: ' + error.message);
+            }
+
+            // Error chart
+            const errorCtx = document.getElementById('errorChart');
+            if (!errorCtx) {
+                console.error('Canvas element not found: errorChart');
+                return;
+            }
+
+            if (errorChart) {
+                errorChart.destroy();
+            }
+
+            try {
+                errorChart = new Chart(errorCtx, {
+                type: 'line',
+                data: {
+                    labels: vizData.t_points,
+                    datasets: [{
+                        label: '逐點誤差',
+                        data: vizData.pointwise_error,
+                        borderColor: 'rgb(255, 159, 64)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `逐點誤差 (最大: ${vizData.max_pointwise_error.toFixed(6)}, 平均: ${vizData.mean_pointwise_error.toFixed(6)})`
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 't'
+                            },
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: '|f(t) - f_fourier(t)|'
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Error chart created successfully');
+            } catch (error) {
+                console.error('Error creating error chart:', error);
+                alert('誤差圖表建立失敗: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
