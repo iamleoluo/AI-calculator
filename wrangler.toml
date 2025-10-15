@@ -4,15 +4,10 @@ compatibility_date = "2024-01-01"
 # Pages configuration
 pages_build_output_dir = "frontend"
 
-# Environment variables (development)
-[env.development.vars]
-BACKEND_URL = "http://localhost:8000"
-
-# Environment variables (production)
-# Set in Cloudflare Pages dashboard:
+# Environment variables for production
+# These should be set in Cloudflare Pages dashboard:
 # - BACKEND_URL: Your Railway backend URL (e.g., https://your-app.railway.app)
 
-# Local development
-[dev]
-port = 8788
-local_protocol = "http"
+# Note: For local development, use .dev.vars file instead
+# .dev.vars should contain:
+# BACKEND_URL=http://localhost:8000
