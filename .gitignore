@@ -51,3 +51,6 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+
+# Session data (runtime generated)
+backend/sessions/

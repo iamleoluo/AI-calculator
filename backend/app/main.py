@@ -7,6 +7,7 @@ import logging
 
 from app.core.config import settings
 from app.api.fourier import router as fourier_router
+from app.api.fourier_v2 import router as fourier_router_v2
 
 # Configure logging
 logging.basicConfig(
@@ -33,7 +34,8 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(fourier_router)
+app.include_router(fourier_router)  # V1 API (legacy)
+app.include_router(fourier_router_v2)  # V2 API (three-stage flow with streaming)
 
 
 @app.on_event("startup")
