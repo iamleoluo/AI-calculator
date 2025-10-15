@@ -353,6 +353,37 @@
     </div>
 
     <script>
+        // ==================== 配置區域 ====================
+        // 部署到 Cloudflare 時，請修改 BACKEND_URL
+        const API_CONFIG = {
+            // 本地開發
+            LOCAL: 'http://localhost:8000',
+            // 生產環境 - 請在部署前修改為你的後端 URL
+            // 例如：'https://your-app.railway.app' 或 'https://your-backend.com'
+            PRODUCTION: 'YOUR_BACKEND_URL_HERE',  // ⚠️ 部署時必須修改這裡！
+        };
+
+        // 自動檢測環境
+        const isLocalhost = window.location.hostname === 'localhost' ||
+                            window.location.hostname === '127.0.0.1' ||
+                            window.location.hostname === '';
+
+        const BACKEND_URL = isLocalhost ? API_CONFIG.LOCAL : API_CONFIG.PRODUCTION;
+
+        // 顯示當前配置（方便除錯）
+        console.log('🔧 API Configuration:', {
+            hostname: window.location.hostname,
+            isLocalhost: isLocalhost,
+            backendURL: BACKEND_URL
+        });
+
+        // 檢查生產環境是否配置了後端 URL
+        if (!isLocalhost && BACKEND_URL === 'YOUR_BACKEND_URL_HERE') {
+            console.error('⚠️ 警告：尚未配置生產環境的後端 URL！');
+            alert('錯誤：尚未配置後端 API 地址。\n\n請修改 index_v2.html 中的 API_CONFIG.PRODUCTION');
+        }
+        // ==================== 配置區域結束 ====================
+
         let comparisonChart = null;
         let errorChart = null;
         let eventSource = null;
@@ -482,7 +513,7 @@
 
             try {
                 // Use EventSource for SSE
-                const url = new URL('http://localhost:8000/api/v2/fourier-series/stream');
+                const url = new URL(`${BACKEND_URL}/api/v2/fourier-series/stream`);
 
                 // Create EventSource with POST data (workaround: use sync endpoint for now)
                 // EventSource doesn't support POST, so we'll use fetch with stream

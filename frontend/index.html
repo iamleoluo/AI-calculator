@@ -298,6 +298,26 @@
     </div>
 
     <script>
+        // ==================== 配置區域 ====================
+        const API_CONFIG = {
+            LOCAL: 'http://localhost:8000',
+            PRODUCTION: 'YOUR_BACKEND_URL_HERE',  // ⚠️ 部署時必須修改這裡！
+        };
+
+        const isLocalhost = window.location.hostname === 'localhost' ||
+                            window.location.hostname === '127.0.0.1' ||
+                            window.location.hostname === '';
+
+        const BACKEND_URL = isLocalhost ? API_CONFIG.LOCAL : API_CONFIG.PRODUCTION;
+
+        console.log('🔧 API Configuration:', {hostname: window.location.hostname, isLocalhost, backendURL: BACKEND_URL});
+
+        if (!isLocalhost && BACKEND_URL === 'YOUR_BACKEND_URL_HERE') {
+            console.error('⚠️ 警告：尚未配置生產環境的後端 URL！');
+            alert('錯誤：尚未配置後端 API 地址。\n\n請修改 index.html 中的 API_CONFIG.PRODUCTION');
+        }
+        // ==================== 配置區域結束 ====================
+
         let comparisonChart = null;
         let errorChart = null;
 
@@ -319,7 +339,7 @@
             document.getElementById('errorContainer').innerHTML = '';
 
             try {
-                const response = await fetch('http://localhost:8000/api/fourier-series', {
+                const response = await fetch(`${BACKEND_URL}/api/fourier-series`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
