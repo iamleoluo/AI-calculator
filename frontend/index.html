@@ -319,7 +319,12 @@
             document.getElementById('errorContainer').innerHTML = '';
 
             try {
-                const response = await fetch('http://localhost:8000/api/fourier-series', {
+                // Use relative path - Cloudflare Worker will proxy to backend
+                // No CORS issues because frontend and Worker are on the same origin
+                const apiUrl = '/api/fourier-series';
+                console.log(`[Frontend V1] Calling API: ${apiUrl}`);
+
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -481,12 +481,13 @@
             }
 
             try {
-                // Use EventSource for SSE
-                const url = new URL('http://localhost:8000/api/v2/fourier-series/stream');
+                // Use relative path - Cloudflare Worker will proxy to backend
+                // No CORS issues because frontend and Worker are on the same origin
+                const apiUrl = '/api/v2/fourier-series/stream';
 
-                // Create EventSource with POST data (workaround: use sync endpoint for now)
-                // EventSource doesn't support POST, so we'll use fetch with stream
-                const response = await fetch(url, {
+                console.log(`[Frontend] Calling API: ${apiUrl}`);
+
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
