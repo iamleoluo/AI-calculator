@@ -152,9 +152,9 @@ class FourierSeriesServiceV2:
                 logger.info("Code translation complete")
 
                 # === STAGE 3: Verification ===
-                verification_result = self.verification_engine.verify_functions(
+                verification_result = self.verification_engine.verify_coefficients(
                     original_function_code=code_response["original_function"],
-                    reconstruction_function_code=code_response["fourier_reconstruction"],
+                    coefficients=code_response["coefficients"],
                     period=period
                 )
 

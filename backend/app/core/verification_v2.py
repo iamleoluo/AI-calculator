@@ -29,6 +29,106 @@ class VerificationEngineV2:
         self.error_threshold = error_threshold or settings.ERROR_THRESHOLD
         logger.info(f"VerificationEngineV2 initialized with threshold: {self.error_threshold}")
 
+    def verify_coefficients(
+        self,
+        original_function_code: str,
+        coefficients: Dict[str, Any],
+        period: float,
+        test_periods: int = 2,
+        test_points: int = 500
+    ) -> Dict[str, Any]:
+        """
+        Verify Fourier coefficients by comparing original function with reconstruction.
+
+        This method generates the reconstruction function from coefficients and verifies
+        it against the original function.
+
+        Args:
+            original_function_code: Complete Python code for original function
+            coefficients: Dictionary with a0, an, bn
+            period: Period of the function
+            test_periods: Number of periods to test (default: 2)
+            test_points: Number of test points (default: 500)
+
+        Returns:
+            Verification result dictionary with error metrics and visualization data
+        """
+        logger.info("Starting coefficient-based verification")
+
+        try:
+            # Execute original function code
+            f_original = self._execute_function_code(
+                original_function_code,
+                expected_function_name="f"
+            )
+
+            # Extract coefficients
+            a0 = float(coefficients["a0"])
+            an = [float(a) for a in coefficients["an"]]
+            bn = [float(b) for b in coefficients["bn"]]
+
+            # Generate reconstruction function
+            omega0 = 2 * np.pi / period
+            n_terms = len(an)
+
+            def reconstruct(t):
+                """Generated Fourier reconstruction function"""
+                result = a0 / 2.0
+                for n in range(1, n_terms + 1):
+                    result += an[n-1] * np.cos(n * omega0 * t)
+                    result += bn[n-1] * np.sin(n * omega0 * t)
+                return result
+
+            # Generate test points
+            t_points = np.linspace(0, test_periods * period, test_points)
+
+            # Compute function values
+            try:
+                original_values = np.array([f_original(t) for t in t_points])
+                reconstruction_values = np.array([reconstruct(t) for t in t_points])
+            except Exception as e:
+                logger.error(f"Error computing function values: {e}")
+                return {
+                    "is_verified": False,
+                    "error_type": "code_execution_error",
+                    "error_message": f"Error evaluating functions: {str(e)}"
+                }
+
+            # Compute errors
+            error_metrics = self._compute_error_metrics(
+                original_values,
+                reconstruction_values,
+                t_points
+            )
+
+            # Check if verified
+            is_verified = error_metrics["max_relative_error"] < self.error_threshold
+
+            result = {
+                "is_verified": is_verified,
+                "error_metrics": error_metrics,
+                "coefficients": {"a0": a0, "an": an, "bn": bn},
+                "test_points": t_points.tolist(),
+                "original_values": original_values.tolist(),
+                "reconstructed_values": reconstruction_values.tolist(),
+                "pointwise_errors": error_metrics["pointwise_absolute_errors"]
+            }
+
+            logger.info(
+                f"Verification {'PASSED' if is_verified else 'FAILED'} - "
+                f"Max relative error: {error_metrics['max_relative_error']:.4f}"
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Verification failed with exception: {e}")
+            return {
+                "is_verified": False,
+                "error_type": "verification_exception",
+                "error_message": str(e)
+            }
+
     def verify_functions(
         self,
         original_function_code: str,

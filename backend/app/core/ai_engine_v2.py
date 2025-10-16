@@ -88,8 +88,17 @@ class AIEngineV2:
             # Validate required fields
             if "original_function" not in parsed_response:
                 raise ValueError("Response missing 'original_function' field")
-            if "fourier_reconstruction" not in parsed_response:
-                raise ValueError("Response missing 'fourier_reconstruction' field")
+            if "coefficients" not in parsed_response:
+                raise ValueError("Response missing 'coefficients' field")
+
+            # Validate coefficients structure
+            coeffs = parsed_response["coefficients"]
+            if "a0" not in coeffs:
+                raise ValueError("Coefficients missing 'a0' field")
+            if "an" not in coeffs or not isinstance(coeffs["an"], list):
+                raise ValueError("Coefficients missing or invalid 'an' field")
+            if "bn" not in coeffs or not isinstance(coeffs["bn"], list):
+                raise ValueError("Coefficients missing or invalid 'bn' field")
 
             logger.info("Code translation successful")
             return parsed_response

@@ -118,7 +118,7 @@ f(t) = a₀/2 + Σ[aₙcos(nω₀t) + bₙsin(nω₀t)]
         n_terms: int
     ) -> str:
         """
-        Build Prompt 2: Translate symbolic derivation to executable Python code.
+        Build Prompt 2: Extract coefficients from symbolic derivation.
 
         Args:
             derivation_markdown: The Markdown derivation from Prompt 1
@@ -127,11 +127,14 @@ f(t) = a₀/2 + Σ[aₙcos(nω₀t) + bₙsin(nω₀t)]
             n_terms: Number of terms
 
         Returns:
-            Formatted prompt for code translation
+            Formatted prompt for coefficient extraction
         """
-        prompt = f"""你是 Python 程式專家。請將你之前的數學推導轉換成可執行的 Python 程式碼。
+        prompt = f"""你剛才推導了傅立葉級數。現在請給我兩個東西：
 
-【你之前的推導過程】
+1. 原始函數的 Python 代碼
+2. 你推導出的傅立葉係數數值
+
+【你的推導過程】
 \"\"\"
 {derivation_markdown}
 \"\"\"
@@ -141,42 +144,31 @@ f(t) = a₀/2 + Σ[aₙcos(nω₀t) + bₙsin(nω₀t)]
 - 週期：T = {period}
 - 項數：n = {n_terms}
 
-【任務】
-請將你的推導結果轉換成兩個完整的 Python 函數：
-1. **原始函數**：根據問題描述實現 f(t)
-2. **傅立葉重建函數**：根據你推導出的係數實現重建函數
-
-【輸出格式要求】
+【輸出格式】
 請返回 **嚴格的 JSON 格式**：
 
 {{
-  "original_function": "完整的 Python 函數定義（包含 import）",
-  "fourier_reconstruction": "完整的 Python 函數定義（包含 import 和你計算的係數）"
+  "original_function": "import numpy as np\\n\\ndef f(t):\\n    return np.sin(t) + np.cos(t)",
+  "coefficients": {{
+    "a0": 0.0,
+    "an": [1.0, 0.0, 0.0],
+    "bn": [1.0, 0.0, 0.0]
+  }}
 }}
 
-【程式碼規範】
-1. **必須包含必要的 import 語句**（如 `import numpy as np`）
-2. **必須可以直接用 exec() 執行**
-3. 函數名稱：
-   - 原始函數命名為 `f(t)`
-   - 重建函數命名為 `reconstruct(t)`
-4. 使用 \\n 表示換行（在 JSON 字串中）
-5. **不要**包含 ```python 標記或任何 markdown
-6. 係數值必須是你推導出的結果（可以是數值或簡單表達式）
+【說明】
+- original_function: 必須包含 import，可以直接用 exec() 執行
+- coefficients.a0: 常數項係數（數值）
+- coefficients.an: 餘弦項係數列表（長度為 {n_terms}）
+- coefficients.bn: 正弦項係數列表（長度為 {n_terms}）
 
-【範例格式】
-{{
-  "original_function": "import numpy as np\\n\\ndef f(t):\\n    return np.sin(t)",
+【重要】
+- 係數必須是**數值**（float），不是符號
+- 根據你的推導結果填寫
+- an[0] 對應 a₁，an[1] 對應 a₂，以此類推
+- 使用 \\n 表示換行
 
-  "fourier_reconstruction": "import numpy as np\\n\\ndef reconstruct(t):\\n    T = {period}\\n    omega0 = 2*np.pi/T\\n    \\n    # a0/2\\n    result = 0.0/2\\n    \\n    # 各項係數\\n    result += 0.0*np.cos(1*omega0*t) + 1.0*np.sin(1*omega0*t)\\n    result += 0.0*np.cos(2*omega0*t) + 0.0*np.sin(2*omega0*t)\\n    \\n    return result"
-}}
-
-【關鍵提醒】
-- omega0 的計算：omega0 = 2*np.pi/T（**注意是 2π**）
-- 係數的數值要根據你的推導結果填入
-- 確保代碼語法正確，可以直接執行
-
-請開始轉換。"""
+請給我結果。"""
 
         return prompt
 
@@ -226,6 +218,12 @@ f(t) = a₀/2 + Σ[aₙcos(nω₀t) + bₙsin(nω₀t)]
 - 驗證閾值: 5%
 """
 
+        # Extract coefficients for display
+        coeffs = code_response.get("coefficients", {})
+        a0 = coeffs.get("a0", "N/A")
+        an = coeffs.get("an", [])
+        bn = coeffs.get("bn", [])
+
         prompt = f"""你是數學和數值計算專家。請分析以下傅立葉級數計算的驗證結果。
 
 【原始問題】
@@ -238,15 +236,14 @@ f(t) = a₀/2 + Σ[aₙcos(nω₀t) + bₙsin(nω₀t)]
 {derivation_markdown[:2000]}...
 \"\"\"
 
-【生成的代碼】
-原始函數：
+【你給出的係數】
+- a₀ = {a0}
+- aₙ = {an}
+- bₙ = {bn}
+
+【原始函數代碼】
 ```python
 {code_response.get("original_function", "N/A")}
-```
-
-重建函數：
-```python
-{code_response.get("fourier_reconstruction", "N/A")}
 ```
 
 {error_context}
