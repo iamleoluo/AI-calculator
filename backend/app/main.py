@@ -25,10 +25,11 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Note: Using ["*"] temporarily to test CORS issue
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],  # Temporarily allow all origins for testing
+    allow_credentials=False,  # Must be False when using "*"
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
