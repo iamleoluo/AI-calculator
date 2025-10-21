@@ -9,7 +9,7 @@ backend_dir = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
 from app.main import app
-from mangum import Mangum
 
-# Create Mangum handler for Vercel
-handler = Mangum(app, lifespan="off")
+# Export app directly for Vercel
+# Vercel will automatically detect this
+__all__ = ["app"]
