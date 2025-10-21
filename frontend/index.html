@@ -507,11 +507,11 @@
             }
 
             try {
-                // Use EventSource for SSE
-                const url = new URL(`${BACKEND_URL}/api/v2/fourier-series/stream`);
+                // 改用同步 API（Vercel 對 streaming 支持不好）
+                const url = new URL(`${BACKEND_URL}/api/v2/fourier-series`);
 
-                // Create EventSource with POST data (workaround: use sync endpoint for now)
-                // EventSource doesn't support POST, so we'll use fetch with stream
+                updateProgressStep('session_created', '正在計算...');
+
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -528,28 +528,28 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
+                // 同步 API 返回完整結果
+                const result = await response.json();
 
-                while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
+                updateProgressStep('derivation_complete', '推導完成');
 
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.substring(6);
-                            try {
-                                const event = JSON.parse(data);
-                                handleEvent(event);
-                            } catch (e) {
-                                console.error('JSON parse error:', e, data);
-                            }
-                        }
+                // 顯示推導過程
+                if (result.derivation) {
+                    sessionData.derivation = result.derivation;
+                    const derivationSection = document.getElementById('derivationSection');
+                    const derivationContent = document.getElementById('derivationContent');
+                    derivationSection.style.display = 'block';
+                    const html = marked.parse(result.derivation);
+                    derivationContent.innerHTML = html;
+                    if (typeof MathJax !== 'undefined') {
+                        MathJax.typesetPromise([derivationContent]).catch((err) => console.log('MathJax error:', err));
                     }
                 }
+
+                updateProgressStep('success', '計算完成');
+
+                // 顯示最終結果
+                displayFinalResults(result);
 
             } catch (error) {
                 console.error('Error:', error);
