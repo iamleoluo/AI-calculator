@@ -40,6 +40,23 @@ app.include_router(fourier_router)  # V1 API (legacy)
 app.include_router(fourier_router_v2)  # V2 API (three-stage flow with streaming)
 
 
+# Global exception handler to ensure CORS headers on all responses
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Ensure all error responses have CORS headers"""
+    from fastapi.responses import JSONResponse
+    logger.error(f"Global exception handler: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+
 @app.on_event("startup")
 async def startup_event():
     """Startup event handler"""
