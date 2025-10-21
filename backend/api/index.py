@@ -9,7 +9,6 @@ backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 from app.main import app
-from mangum import Mangum
 
-# Wrap FastAPI app for Vercel
-handler = Mangum(app, lifespan="off")
+# Export app directly for Vercel (Vercel supports ASGI natively)
+# No need for Mangum wrapper
