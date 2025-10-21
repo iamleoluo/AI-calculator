@@ -26,7 +26,7 @@ const CONFIG = {
         }
 
         // 默认生产后端 URL（部署时修改）
-        return 'https://your-vercel-backend.vercel.app';
+        return 'https://aifouriercalculator.vercel.app';
     })(),
 
     // API 端点
