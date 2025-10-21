@@ -1,0 +1,12 @@
+# Headers for Cloudflare Pages
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer-when-downgrade
+
+# Allow CORS for API requests
+/*.js
+  Access-Control-Allow-Origin: *
+/*.html
+  Access-Control-Allow-Origin: *

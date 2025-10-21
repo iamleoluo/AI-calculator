@@ -54,3 +54,8 @@ htmlcov/
 
 # Session data (runtime generated)
 backend/sessions/
+
+# Deployment
+.vercel
+.cloudflare/
+frontend/config.production.js

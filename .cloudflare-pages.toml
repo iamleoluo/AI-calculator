@@ -1,0 +1,12 @@
+# Cloudflare Pages Configuration
+
+[build]
+  command = ""
+  publish = "frontend"
+
+[build.environment]
+  # No build environment needed for static HTML
+
+# Production deployment
+[env.production]
+  # Add any production-specific settings here

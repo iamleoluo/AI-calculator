@@ -7,12 +7,27 @@
  */
 
 const CONFIG = {
-    // API Base URL - 根据环境修改
+    // API Base URL - 自动检测环境
     // 本地开发: 'http://localhost:8000'
-    // 生产环境: 'https://your-backend.railway.app' (或其他后端 URL)
-    API_BASE_URL: window.location.hostname === 'localhost'
-        ? 'http://localhost:8000'
-        : 'https://your-backend-url.com',  // 部署时修改这里
+    // 生产环境 (Vercel): 'https://your-project.vercel.app'
+    // 生产环境 (Railway): 'https://your-backend.railway.app'
+    API_BASE_URL: (() => {
+        const hostname = window.location.hostname;
+
+        // 本地开发环境
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:8000';
+        }
+
+        // 生产环境 - 从环境变量读取或使用默认值
+        // 部署到 Cloudflare Pages 时，在 Pages 设置中添加环境变量 VITE_API_URL
+        if (typeof CLOUDFLARE_API_URL !== 'undefined') {
+            return CLOUDFLARE_API_URL;
+        }
+
+        // 默认生产后端 URL（部署时修改）
+        return 'https://your-vercel-backend.vercel.app';
+    })(),
 
     // API 端点
     API_ENDPOINTS: {
