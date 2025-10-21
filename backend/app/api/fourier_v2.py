@@ -35,11 +35,12 @@ async def fourier_series_stream_options():
     """Handle CORS preflight request"""
     from fastapi import Response
     return Response(
-        status_code=200,
+        status_code=204,
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+            "Access-Control-Max-Age": "86400",
         }
     )
 
