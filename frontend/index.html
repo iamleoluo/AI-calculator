@@ -362,12 +362,14 @@
             PRODUCTION: 'https://aifouriercalculator.vercel.app',
         };
 
-        // 自動檢測環境
-        const isLocalhost = window.location.hostname === 'localhost' ||
-                            window.location.hostname === '127.0.0.1' ||
-                            window.location.hostname === '';
+        // 強制使用 Vercel 後端進行測試
+        const BACKEND_URL = API_CONFIG.PRODUCTION;
 
-        const BACKEND_URL = isLocalhost ? API_CONFIG.LOCAL : API_CONFIG.PRODUCTION;
+        // 自動檢測環境（暫時停用）
+        // const isLocalhost = window.location.hostname === 'localhost' ||
+        //                     window.location.hostname === '127.0.0.1' ||
+        //                     window.location.hostname === '';
+        // const BACKEND_URL = isLocalhost ? API_CONFIG.LOCAL : API_CONFIG.PRODUCTION;
 
         // 顯示當前配置（方便除錯）
         console.log('🔧 API Configuration:', {
