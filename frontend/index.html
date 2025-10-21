@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Calculator - Fourier Series</title>
+    <title>AI Calculator V2 - Fourier Series</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -42,6 +43,17 @@
             font-size: 1.1em;
         }
 
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
         .input-section {
             background: #f8f9fa;
             padding: 30px;
@@ -60,7 +72,7 @@
             color: #333;
         }
 
-        input, select {
+        input {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -69,7 +81,7 @@
             transition: border-color 0.3s;
         }
 
-        input:focus, select:focus {
+        input:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -102,25 +114,101 @@
             cursor: not-allowed;
         }
 
-        .loading {
+        .computing-section {
             display: none;
-            text-align: center;
-            padding: 40px;
+        }
+
+        .progress-container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #e0e0e0;
+        }
+
+        .progress-step.active {
+            border-left-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .progress-step.complete {
+            border-left-color: #28a745;
+        }
+
+        .step-icon {
+            font-size: 24px;
+            margin-right: 15px;
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 24px;
+            height: 24px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin-right: 15px;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        .derivation-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .derivation-content {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .derivation-content h2 {
+            color: #667eea;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .derivation-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .derivation-content code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .derivation-streaming-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #667eea;
+            animation: blink 1s infinite;
+            margin-left: 4px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
 
         .results {
@@ -141,38 +229,6 @@
             font-size: 1.5em;
         }
 
-        .coefficients-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .coeff-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .coeff-label {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .coeff-value {
-            font-size: 1.2em;
-            color: #333;
-            font-family: 'Courier New', monospace;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin-top: 20px;
-        }
-
         .verification-badge {
             display: inline-block;
             padding: 8px 16px;
@@ -186,9 +242,20 @@
             color: #155724;
         }
 
+        .verification-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
         .verification-fail {
             background: #f8d7da;
             color: #721c24;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
         }
 
         .error-message {
@@ -200,40 +267,20 @@
             border-left: 4px solid #dc3545;
         }
 
-        .thinking-step {
-            background: white;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .step-title {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-
-        .step-content {
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .iterations-info {
-            background: #fff3cd;
-            color: #856404;
-            padding: 12px 20px;
+        .info-message {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
+            border-left: 4px solid #17a2b8;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧮 AI Calculator</h1>
-        <p class="subtitle">透明化的 AI 數學推理 - 傅立葉級數計算</p>
+        <h1>🧮 AI Calculator <span class="badge">V2</span></h1>
+        <p class="subtitle">透明化的 AI 數學推理 - 傅立葉級數計算（流式輸出版）</p>
 
         <div class="input-section">
             <h2 style="margin-bottom: 20px; color: #333;">輸入函數</h2>
@@ -252,26 +299,34 @@
 
             <div class="form-group">
                 <label for="nTerms">項數 (n)</label>
-                <input type="number" id="nTerms" value="5" min="1" max="10" placeholder="1-10">
-                <div class="hint">計算傅立葉級數的項數 (1-10)</div>
+                <input type="number" id="nTerms" value="3" min="1" max="20" placeholder="1-20">
+                <div class="hint">計算傅立葉級數的項數 (1-20)</div>
             </div>
 
             <button id="computeBtn" onclick="computeFourier()">開始計算</button>
         </div>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>AI 正在推導傅立葉級數...</p>
-            <p style="color: #666; margin-top: 10px;">這可能需要 10-30 秒</p>
+        <!-- Computing Progress Section -->
+        <div class="computing-section" id="computingSection">
+            <div class="progress-container">
+                <h2 style="margin-bottom: 20px; color: #333;">⚡ 計算進度</h2>
+                <div id="progressSteps"></div>
+            </div>
+
+            <!-- Live Derivation Display -->
+            <div class="derivation-section" id="derivationSection" style="display:none;">
+                <h2 style="margin-bottom: 15px; color: #333;">📖 AI 推導過程（實時）</h2>
+                <div class="derivation-content" id="derivationContent"></div>
+            </div>
         </div>
 
+        <!-- Final Results Section -->
         <div class="results" id="results">
-            <div id="iterationsInfo"></div>
-            <div id="verificationBadge"></div>
+            <div id="statusMessage"></div>
 
             <div class="result-section">
-                <h2>📊 傅立葉係數</h2>
-                <div id="coefficients"></div>
+                <h2>📊 驗證結果</h2>
+                <div id="verificationInfo"></div>
             </div>
 
             <div class="result-section">
@@ -289,8 +344,8 @@
             </div>
 
             <div class="result-section">
-                <h2>🤔 AI 推理過程</h2>
-                <div id="thinkingProcess"></div>
+                <h2>🤔 完整推導過程</h2>
+                <div id="finalDerivation" class="derivation-content"></div>
             </div>
         </div>
 
@@ -299,27 +354,137 @@
 
     <script>
         // ==================== 配置區域 ====================
+        // 部署到 Cloudflare 時，請修改 BACKEND_URL
         const API_CONFIG = {
+            // 本地開發
             LOCAL: 'http://localhost:8000',
+            // 生產環境 - 請在部署前修改為你的後端 URL
+            // 例如：'https://your-app.railway.app' 或 'https://your-backend.com'
             PRODUCTION: 'YOUR_BACKEND_URL_HERE',  // ⚠️ 部署時必須修改這裡！
         };
 
+        // 自動檢測環境
         const isLocalhost = window.location.hostname === 'localhost' ||
                             window.location.hostname === '127.0.0.1' ||
                             window.location.hostname === '';
 
         const BACKEND_URL = isLocalhost ? API_CONFIG.LOCAL : API_CONFIG.PRODUCTION;
 
-        console.log('🔧 API Configuration:', {hostname: window.location.hostname, isLocalhost, backendURL: BACKEND_URL});
+        // 顯示當前配置（方便除錯）
+        console.log('🔧 API Configuration:', {
+            hostname: window.location.hostname,
+            isLocalhost: isLocalhost,
+            backendURL: BACKEND_URL
+        });
 
+        // 檢查生產環境是否配置了後端 URL
         if (!isLocalhost && BACKEND_URL === 'YOUR_BACKEND_URL_HERE') {
             console.error('⚠️ 警告：尚未配置生產環境的後端 URL！');
-            alert('錯誤：尚未配置後端 API 地址。\n\n請修改 index.html 中的 API_CONFIG.PRODUCTION');
+            alert('錯誤：尚未配置後端 API 地址。\n\n請修改 index_v2.html 中的 API_CONFIG.PRODUCTION');
         }
         // ==================== 配置區域結束 ====================
 
         let comparisonChart = null;
         let errorChart = null;
+        let eventSource = null;
+        let sessionData = {
+            derivation: '',
+            verification: null,
+            visualization: null,
+            iterations: 0
+        };
+
+        // Progress steps configuration
+        const PROGRESS_STEPS = {
+            session_created: { icon: '🎯', text: 'Session 已建立' },
+            derivation_chunk: { icon: '📝', text: 'AI 正在推導...' },
+            derivation_complete: { icon: '✅', text: '推導完成' },
+            code_generated: { icon: '💻', text: '代碼生成完成' },
+            verification_result: { icon: '🔍', text: '驗證中...' },
+            error_analysis: { icon: '🧠', text: 'AI 錯誤分析' },
+            success: { icon: '🎉', text: '計算成功！' },
+            success_with_warning: { icon: '⚠️', text: '完成（有警告）' },
+            failed: { icon: '❌', text: '計算失敗' }
+        };
+
+        function updateProgressStep(type, message) {
+            const config = PROGRESS_STEPS[type];
+            if (!config) return;
+
+            const container = document.getElementById('progressSteps');
+            const stepId = `step-${type}`;  // Fixed ID without timestamp
+
+            // Check if step already exists
+            let stepElement = document.getElementById(stepId);
+
+            if (stepElement) {
+                // Update existing step
+                const contentDiv = stepElement.querySelector('div:last-child');
+                if (contentDiv) {
+                    contentDiv.innerHTML = `
+                        <strong>${config.text}</strong>
+                        ${message ? `<div style="color: #666; font-size: 0.9em; margin-top: 4px;">${message}</div>` : ''}
+                    `;
+                }
+            } else {
+                // Create new step
+                // Mark previous steps as complete
+                document.querySelectorAll('.progress-step.active').forEach(el => {
+                    el.classList.remove('active');
+                    el.classList.add('complete');
+                });
+
+                const stepHtml = `
+                    <div class="progress-step active" id="${stepId}">
+                        <div class="step-icon">${config.icon}</div>
+                        <div>
+                            <strong>${config.text}</strong>
+                            ${message ? `<div style="color: #666; font-size: 0.9em; margin-top: 4px;">${message}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML += stepHtml;
+            }
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendDerivationChunk(chunk) {
+            const derivationSection = document.getElementById('derivationSection');
+            const derivationContent = document.getElementById('derivationContent');
+
+            derivationSection.style.display = 'block';
+
+            // Append chunk
+            sessionData.derivation += chunk;
+
+            // Parse Markdown and render
+            const html = marked.parse(sessionData.derivation);
+            derivationContent.innerHTML = html + '<span class="derivation-streaming-indicator"></span>';
+
+            // Trigger MathJax to re-render math
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise([derivationContent]).catch((err) => console.log('MathJax error:', err));
+            }
+
+            // Auto-scroll
+            derivationContent.scrollTop = derivationContent.scrollHeight;
+        }
+
+        function completeDerivation() {
+            const derivationContent = document.getElementById('derivationContent');
+
+            // Remove streaming indicator
+            const html = marked.parse(sessionData.derivation);
+            derivationContent.innerHTML = html;
+
+            // Final MathJax render
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise([derivationContent]).catch((err) => console.log('MathJax error:', err));
+            }
+        }
 
         async function computeFourier() {
             const functionExpr = document.getElementById('functionExpr').value;
@@ -332,14 +497,27 @@
                 return;
             }
 
-            // Show loading
+            // Reset
             document.getElementById('computeBtn').disabled = true;
-            document.getElementById('loading').style.display = 'block';
+            document.getElementById('computingSection').style.display = 'block';
             document.getElementById('results').style.display = 'none';
             document.getElementById('errorContainer').innerHTML = '';
+            document.getElementById('progressSteps').innerHTML = '';
+            document.getElementById('derivationSection').style.display = 'none';
+            sessionData = { derivation: '', verification: null, visualization: null, iterations: 0 };
+
+            // Close existing EventSource
+            if (eventSource) {
+                eventSource.close();
+            }
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/fourier-series`, {
+                // Use EventSource for SSE
+                const url = new URL(`${BACKEND_URL}/api/v2/fourier-series/stream`);
+
+                // Create EventSource with POST data (workaround: use sync endpoint for now)
+                // EventSource doesn't support POST, so we'll use fetch with stream
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -351,11 +529,32 @@
                     })
                 });
 
-                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                // Display results even if not fully successful
-                // (e.g., verification failed but we still have visualization)
-                displayResults(data);
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.substring(6);
+                            try {
+                                const event = JSON.parse(data);
+                                handleEvent(event);
+                            } catch (e) {
+                                console.error('JSON parse error:', e, data);
+                            }
+                        }
+                    }
+                }
 
             } catch (error) {
                 console.error('Error:', error);
@@ -366,129 +565,149 @@
                 `;
             } finally {
                 document.getElementById('computeBtn').disabled = false;
-                document.getElementById('loading').style.display = 'none';
             }
         }
 
-        function displayResults(data) {
-            console.log('Displaying results:', data);
+        function handleEvent(event) {
+            console.log('Event:', event);
 
-            // Show error message if not successful
-            if (!data.success && data.error) {
-                document.getElementById('iterationsInfo').innerHTML = `
-                    <div class="error-message">
-                        ⚠️ ${data.error}
-                        <br><small>仍然顯示最後一次嘗試的結果</small>
-                    </div>
-                `;
-            } else if (data.iterations > 1) {
-                document.getElementById('iterationsInfo').innerHTML = `
-                    <div class="iterations-info">
-                        ℹ️ AI 經過 ${data.iterations} 次迭代修正後得到正確結果
-                    </div>
-                `;
-            } else {
-                document.getElementById('iterationsInfo').innerHTML = '';
+            switch (event.type) {
+                case 'session_created':
+                    updateProgressStep('session_created', `Session ID: ${event.session_id}`);
+                    break;
+
+                case 'iteration_start':
+                    sessionData.iterations = event.iteration;
+                    updateProgressStep('iteration_start', `迭代 ${event.iteration}`);
+                    // Reset derivation for new iteration
+                    if (event.iteration > 1) {
+                        sessionData.derivation = '';
+                        document.getElementById('derivationContent').innerHTML = '';
+                    }
+                    break;
+
+                case 'derivation_chunk':
+                    appendDerivationChunk(event.content);
+                    updateProgressStep('derivation_chunk');
+                    break;
+
+                case 'derivation_complete':
+                    completeDerivation();
+                    updateProgressStep('derivation_complete', `${sessionData.derivation.length} 字元`);
+                    break;
+
+                case 'code_generated':
+                    updateProgressStep('code_generated');
+                    console.log('Generated code:', event.code);
+                    break;
+
+                case 'verification_result':
+                    sessionData.verification = event.result;
+                    const verified = event.result.is_verified;
+                    const maxError = event.result.error_metrics?.max_relative_error || 0;
+                    updateProgressStep('verification_result',
+                        verified ? `✓ 通過 (誤差: ${(maxError * 100).toFixed(4)}%)` : '✗ 未通過');
+                    break;
+
+                case 'error_analysis':
+                    const analysis = event.analysis;
+                    updateProgressStep('error_analysis',
+                        `${analysis.error_category} (${analysis.severity})`);
+                    break;
+
+                case 'success':
+                case 'success_with_warning':
+                    updateProgressStep(event.type);
+                    displayFinalResults(event.result);
+                    break;
+
+                case 'failed':
+                case 'max_iterations_reached':
+                    updateProgressStep(event.type, event.reason || event.message);
+                    showError(event.reason || '達到最大迭代次數');
+                    break;
+
+                default:
+                    console.log('Unknown event type:', event.type);
             }
+        }
 
-            // Verification badge
-            if (data.verification) {
-                const verification = data.verification;
-                const badgeClass = verification.is_verified ? 'verification-pass' : 'verification-fail';
-                const badgeText = verification.is_verified ? '✓ 驗證通過' : '✗ 驗證失敗';
-                document.getElementById('verificationBadge').innerHTML = `
-                    <div class="verification-badge ${badgeClass}">${badgeText}</div>
-                    <p>最大相對誤差: ${(verification.max_error * 100).toFixed(4)}%</p>
-                    <p>平均相對誤差: ${(verification.mean_error * 100).toFixed(4)}%</p>
-                `;
-            } else {
-                document.getElementById('verificationBadge').innerHTML = '';
-            }
-
-            // Coefficients
-            const coeffs = data.coefficients;
-            if (!coeffs) {
-                document.getElementById('coefficients').innerHTML = '<p>無法獲取係數數據</p>';
-            } else {
-            let coeffHtml = `
-                <div class="coefficients-grid">
-                    <div class="coeff-item">
-                        <div class="coeff-label">a₀</div>
-                        <div class="coeff-value">${coeffs.a0.toFixed(6)}</div>
-                    </div>
-            `;
-
-            for (let i = 0; i < coeffs.an.length; i++) {
-                coeffHtml += `
-                    <div class="coeff-item">
-                        <div class="coeff-label">a${i + 1}</div>
-                        <div class="coeff-value">${coeffs.an[i].toFixed(6)}</div>
-                    </div>
-                    <div class="coeff-item">
-                        <div class="coeff-label">b${i + 1}</div>
-                        <div class="coeff-value">${coeffs.bn[i].toFixed(6)}</div>
-                    </div>
-                `;
-            }
-
-            coeffHtml += '</div>';
-            document.getElementById('coefficients').innerHTML = coeffHtml;
-            }
-
-            // Visualization (always try to display if available)
-            if (data.visualization) {
-                displayCharts(data.visualization);
-            } else {
-                console.warn('No visualization data available');
-            }
-
-            // Thinking process
-            if (data.thinking_process && data.thinking_process.steps) {
-                let thinkingHtml = '';
-                data.thinking_process.steps.forEach(step => {
-                    thinkingHtml += `
-                        <div class="thinking-step">
-                            <div class="step-title">步驟 ${step.step_number}: ${step.title}</div>
-                            <div class="step-content">${step.explanation || step.calculation || ''}</div>
-                        </div>
-                    `;
-                });
-                document.getElementById('thinkingProcess').innerHTML = thinkingHtml;
-            }
-
-            // Show results
+        function displayFinalResults(result) {
+            // Show results section
             document.getElementById('results').style.display = 'block';
+
+            // Status message
+            let statusHtml = '';
+            if (result.success === false && result.status === 'acceptable_error') {
+                statusHtml = `
+                    <div class="info-message">
+                        ℹ️ ${result.error_analysis?.explanation || '計算完成，存在可接受的誤差'}
+                        <br><small>${result.error_analysis?.suggestion_to_user || ''}</small>
+                    </div>
+                `;
+            } else if (sessionData.iterations > 1) {
+                statusHtml = `
+                    <div class="info-message">
+                        ✓ AI 經過 ${sessionData.iterations} 次迭代後成功計算
+                    </div>
+                `;
+            }
+            document.getElementById('statusMessage').innerHTML = statusHtml;
+
+            // Verification info
+            if (result.verification || sessionData.verification) {
+                const verification = result.verification || sessionData.verification;
+                const maxError = verification.error_metrics?.max_relative_error || verification.max_relative_error || 0;
+                const meanError = verification.error_metrics?.mean_relative_error || verification.mean_relative_error || 0;
+
+                let badgeClass = 'verification-pass';
+                let badgeText = '✓ 驗證通過';
+
+                if (!verification.is_verified) {
+                    if (result.status === 'acceptable_error') {
+                        badgeClass = 'verification-warning';
+                        badgeText = '⚠️ 可接受的誤差';
+                    } else {
+                        badgeClass = 'verification-fail';
+                        badgeText = '✗ 驗證失敗';
+                    }
+                }
+
+                document.getElementById('verificationInfo').innerHTML = `
+                    <div class="verification-badge ${badgeClass}">${badgeText}</div>
+                    <p><strong>最大相對誤差:</strong> ${(maxError * 100).toFixed(6)}%</p>
+                    <p><strong>平均相對誤差:</strong> ${(meanError * 100).toFixed(6)}%</p>
+                `;
+            }
+
+            // Visualization
+            if (result.visualization) {
+                displayCharts(result.visualization);
+            }
+
+            // Final derivation
+            if (result.derivation || sessionData.derivation) {
+                const derivation = result.derivation || sessionData.derivation;
+                const html = marked.parse(derivation);
+                document.getElementById('finalDerivation').innerHTML = html;
+
+                if (typeof MathJax !== 'undefined') {
+                    MathJax.typesetPromise([document.getElementById('finalDerivation')])
+                        .catch((err) => console.log('MathJax error:', err));
+                }
+            }
         }
 
         function displayCharts(vizData) {
-            console.log('displayCharts called with:', vizData);
-
-            // Check if Chart is loaded
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not loaded!');
-                alert('Chart.js 載入失敗，請重新整理頁面');
-                return;
-            }
-
-            // Check if vizData is valid
-            if (!vizData || !vizData.t_points || !vizData.original_values) {
-                console.error('Invalid visualization data:', vizData);
-                return;
-            }
+            if (!vizData || !vizData.t_points) return;
 
             // Comparison chart
             const comparisonCtx = document.getElementById('comparisonChart');
-            if (!comparisonCtx) {
-                console.error('Canvas element not found: comparisonChart');
-                return;
-            }
-
             if (comparisonChart) {
                 comparisonChart.destroy();
             }
 
-            try {
-                comparisonChart = new Chart(comparisonCtx, {
+            comparisonChart = new Chart(comparisonCtx, {
                 type: 'line',
                 data: {
                     labels: vizData.t_points,
@@ -519,57 +738,33 @@
                         title: {
                             display: true,
                             text: '原始函數 vs 傅立葉級數重建'
-                        },
-                        legend: {
-                            position: 'top',
                         }
                     },
                     scales: {
                         x: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 't'
-                            },
-                            ticks: {
-                                maxTicksLimit: 10
-                            }
+                            title: { display: true, text: 't' },
+                            ticks: { maxTicksLimit: 10 }
                         },
                         y: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 'f(t)'
-                            }
+                            title: { display: true, text: 'f(t)' }
                         }
                     }
                 }
             });
-            console.log('Comparison chart created successfully');
-            } catch (error) {
-                console.error('Error creating comparison chart:', error);
-                alert('視覺化圖表建立失敗: ' + error.message);
-            }
 
             // Error chart
             const errorCtx = document.getElementById('errorChart');
-            if (!errorCtx) {
-                console.error('Canvas element not found: errorChart');
-                return;
-            }
-
             if (errorChart) {
                 errorChart.destroy();
             }
 
-            try {
-                errorChart = new Chart(errorCtx, {
+            errorChart = new Chart(errorCtx, {
                 type: 'line',
                 data: {
                     labels: vizData.t_points,
                     datasets: [{
                         label: '逐點誤差',
-                        data: vizData.pointwise_error,
+                        data: vizData.pointwise_error || vizData.pointwise_errors,
                         borderColor: 'rgb(255, 159, 64)',
                         backgroundColor: 'rgba(255, 159, 64, 0.2)',
                         borderWidth: 2,
@@ -583,38 +778,28 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: `逐點誤差 (最大: ${vizData.max_pointwise_error.toFixed(6)}, 平均: ${vizData.mean_pointwise_error.toFixed(6)})`
-                        },
-                        legend: {
-                            position: 'top',
+                            text: `逐點誤差 (最大: ${(vizData.max_pointwise_error || 0).toFixed(6)})`
                         }
                     },
                     scales: {
                         x: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: 't'
-                            },
-                            ticks: {
-                                maxTicksLimit: 10
-                            }
+                            title: { display: true, text: 't' },
+                            ticks: { maxTicksLimit: 10 }
                         },
                         y: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: '|f(t) - f_fourier(t)|'
-                            }
+                            title: { display: true, text: '|誤差|' }
                         }
                     }
                 }
             });
-            console.log('Error chart created successfully');
-            } catch (error) {
-                console.error('Error creating error chart:', error);
-                alert('誤差圖表建立失敗: ' + error.message);
-            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorContainer').innerHTML = `
+                <div class="error-message">
+                    <strong>錯誤：</strong> ${message}
+                </div>
+            `;
         }
     </script>
 </body>
