@@ -101,6 +101,21 @@ async def compute_fourier_series_stream(request: FourierSeriesRequest):
     )
 
 
+@router.options("/fourier-series")
+async def fourier_series_sync_options():
+    """Handle CORS preflight for sync endpoint"""
+    from fastapi import Response
+    return Response(
+        status_code=204,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
+
+
 @router.post("/fourier-series")
 async def compute_fourier_series_sync(request: FourierSeriesRequest):
     """
@@ -113,6 +128,9 @@ async def compute_fourier_series_sync(request: FourierSeriesRequest):
         Complete computation result
     """
     logger.info(f"Received sync request: {request.function_expr}, T={request.period}, n={request.n_terms}")
+
+    from fastapi import Response
+    import json as json_module
 
     service = FourierSeriesServiceV2()
 
@@ -139,13 +157,23 @@ async def compute_fourier_series_sync(request: FourierSeriesRequest):
 
         # Build complete response
         if final_result:
-            response = {
+            response_data = {
                 "status": final_result["type"],
                 "derivation": "".join(derivation_chunks),
                 "events": events,
                 **final_result.get("result", {})
             }
-            return response
+
+            # Return with explicit CORS headers
+            return Response(
+                content=json_module.dumps(response_data, ensure_ascii=False),
+                media_type="application/json",
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "POST, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                }
+            )
         else:
             raise HTTPException(status_code=500, detail="Computation did not complete properly")
 
