@@ -30,13 +30,22 @@ class SessionManager:
         └── final_result.json (if successful)
     """
 
-    def __init__(self, base_dir: str = "sessions"):
+    def __init__(self, base_dir: str = None):
         """
         Initialize session manager.
 
         Args:
             base_dir: Base directory for storing sessions (relative to backend root)
+                     If None, uses /tmp/sessions for serverless environments
         """
+        if base_dir is None:
+            # Use /tmp for serverless environments (e.g., Vercel, AWS Lambda)
+            import os
+            if os.path.exists('/tmp'):
+                base_dir = "/tmp/sessions"
+            else:
+                base_dir = "sessions"
+
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"SessionManager initialized with base_dir: {self.base_dir.absolute()}")
