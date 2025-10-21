@@ -1,23 +1,13 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.py"
-    }
-  ],
-  "env": {
-    "CLAUDE_API_KEY": "@claude_api_key"
-  },
-  "regions": ["iad1"],
   "functions": {
     "api/index.py": {
+      "runtime": "python3.9",
       "maxDuration": 60,
       "memory": 1024
     }
