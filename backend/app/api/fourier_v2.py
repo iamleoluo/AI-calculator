@@ -30,6 +30,20 @@ class FourierSeriesRequest(BaseModel):
         }
 
 
+@router.options("/fourier-series/stream")
+async def fourier_series_stream_options():
+    """Handle CORS preflight request"""
+    from fastapi import Response
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+
 @router.post("/fourier-series/stream")
 async def compute_fourier_series_stream(request: FourierSeriesRequest):
     """
