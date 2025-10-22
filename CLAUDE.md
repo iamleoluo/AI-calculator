@@ -233,3 +233,69 @@ The core data flow (input → AI derivation → verification → feedback) is to
   - `REDIS_URL`: Redis connection string (optional, for caching)
   - `ERROR_THRESHOLD`: Verification error threshold (default: 0.01)
   - `MAX_ITERATIONS`: Maximum iteration attempts (default: 5)
+
+---
+
+## 📚 Project Documentation
+
+All project documentation is organized in the `docs/` directory. **Note**: Some documents contain outdated information from the planning phase.
+
+### ✅ Current & Active Documents
+
+**Deployment**:
+- `docs/reports/DEPLOYMENT_SUCCESS_20251021.md` - **最新部署報告** (Vercel + Cloudflare Pages)
+  - Current production architecture
+  - CORS solutions for Vercel Serverless
+  - Session management with `/tmp` directory
+  - All deployment issues and solutions
+
+**Testing**:
+- `docs/reports/20251015_V2_TEST_RESULTS.md` - V2 版本測試結果
+  - Three-stage streaming workflow tests
+  - Valid for current V2 API implementation
+
+### ⚠️ Historical Documents (Reference Only)
+
+**Architecture** (2025-10-14):
+- `docs/architecture/20251014_ARCHITECTURE.md` - 初始架構設計
+  - **注意**: 設計時規劃使用 Next.js 前端，實際部署使用靜態 HTML
+  - **注意**: 設計時規劃使用 PostgreSQL + Redis，實際使用 `/tmp` session 存儲
+  - 核心概念（Dual-Output、Closed-Loop Verification）仍然有效
+
+**Planning** (2025-10-14):
+- `docs/planning/20251014_專案大綱.md` - 初始專案規劃
+  - **注意**: 包含未實現的功能（用戶認證、資料庫等）
+- `docs/planning/20251014_技術實作方案.md` - 初始技術方案
+  - **注意**: 規劃的技術棧與實際部署不同
+
+**Deployment** (2025-10-15 - Deprecated):
+- `docs/deployment/20251015_DEPLOYMENT_GUIDE_Railway.md` - Railway 部署指南
+  - **已棄用**: 專案最終部署在 Vercel + Cloudflare，不是 Railway
+  - 僅作為替代方案參考
+
+### 📖 Document Usage Guide
+
+When working with this codebase:
+
+1. **For current deployment info**: Refer to `docs/reports/DEPLOYMENT_SUCCESS_20251021.md`
+2. **For architecture concepts**: Use `docs/architecture/20251014_ARCHITECTURE.md` for core principles, but note implementation differences
+3. **For planning reference**: Historical planning docs are useful for understanding original intent, but verify against actual code
+
+### 🔄 Current vs. Planned Differences
+
+| Aspect | Original Plan | Current Implementation |
+|--------|---------------|------------------------|
+| Frontend | Next.js + React + TypeScript | Static HTML + Vanilla JS |
+| Backend Host | Railway | Vercel Serverless |
+| Frontend Host | Vercel | Cloudflare Pages |
+| Database | PostgreSQL + Redis | No database (session in `/tmp`) |
+| API Style | Streaming (SSE) | Synchronous (streaming 不穩定) |
+| CORS | Middleware only | Explicit headers + global exception handler |
+
+### 📝 Documentation Maintenance
+
+- All documents are timestamped (YYYYMMDD_filename.md)
+- Historical documents are marked with ⚠️ in `docs/README.md`
+- Current production state is in `docs/reports/DEPLOYMENT_SUCCESS_20251021.md`
+
+**When in doubt, trust the code over the docs.**
